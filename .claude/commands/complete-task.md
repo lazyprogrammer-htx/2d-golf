@@ -57,6 +57,7 @@ Carefully follow the directories.. Make the directory if necessary. Do not add o
 - Update task status in `tasks/tracking/$ARGUMENTS/STATUS.md`
 - Create summary report of changes made
 - Archive all working files for future reference
+- Change each task checkbox from [ ] -> [X] when done!!
 
 ## Error Handling:
 

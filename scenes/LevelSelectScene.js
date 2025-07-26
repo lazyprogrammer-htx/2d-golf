@@ -128,7 +128,7 @@ class LevelSelectScene extends Phaser.Scene {
         
         // Create button background
         const background = this.add.circle(0, 0, size / 2, backgroundColor);
-        background.setStroke(strokeColor, 3);
+        background.setStrokeStyle(3, strokeColor);
         container.add(background);
         
         // Create level number text

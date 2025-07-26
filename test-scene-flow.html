@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scene Flow Test - Mini Golf Master</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <script src="objects/Wall.js"></script>
+    <script src="objects/SandTrap.js"></script>
+    <script src="objects/Club.js"></script>
+    <script src="objects/PowerMeter.js"></script>
+    <script src="objects/LevelLoader.js"></script>
+    <script src="ui/ClubSelector.js"></script>
+    <script src="scenes/MenuScene.js"></script>
+    <script src="scenes/LevelSelectScene.js"></script>
+  </head>
+  <body>
+    <div style="text-align: center; margin: 20px;">
+      <h1>Scene Flow Test</h1>
+      <p>Testing: Menu → Level Select → Game → Back to Level Select</p>
+      <button onclick="clearProgress()">Clear Progress (Reset to Level 1 only)</button>
+      <button onclick="unlockAllLevels()">Unlock All Levels (Testing)</button>
+    </div>
+    
+    <div class="game-container" id="game-canvas">
+    </div>
+    
+    <script src="main.js"></script>
+    
+    <script>
+      function clearProgress() {
+        for (let i = 2; i <= 14; i++) {
+          localStorage.removeItem(`level_${i}_unlocked`);
+          localStorage.removeItem(`level_${i}_completed`);
+        }
+        localStorage.removeItem('level_1_completed');
+        alert('Progress cleared! Only Level 1 is now unlocked.');
+        location.reload();
+      }
+      
+      function unlockAllLevels() {
+        for (let i = 1; i <= 14; i++) {
+          localStorage.setItem(`level_${i}_unlocked`, 'true');
+        }
+        alert('All levels unlocked for testing!');
+        location.reload();
+      }
+    </script>
+  </body>
+</html>

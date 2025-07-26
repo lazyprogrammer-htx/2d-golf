@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save System Test - 2D Golf</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1976D2;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .info {
+            color: #ffeb3b;
+        }
+        pre {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>2D Golf - Save System Test</h1>
+        
+        <div class="test-section">
+            <h2>Save System Status</h2>
+            <div id="saveSystemStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Current Save Data</h2>
+            <button onclick="loadAndDisplaySaveData()">Load Save Data</button>
+            <button onclick="clearSaveData()">Clear All Save Data</button>
+            <pre id="saveDataDisplay"></pre>
+        </div>
+
+        <div class="test-section">
+            <h2>Level Completion Tests</h2>
+            <button onclick="completeLevel(1, 3)">Complete Level 1 (3 shots)</button>
+            <button onclick="completeLevel(2, 5)">Complete Level 2 (5 shots)</button>
+            <button onclick="completeLevel(3, 2)">Complete Level 3 (2 shots)</button>
+            <div id="completionResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Level Status Checks</h2>
+            <button onclick="checkLevelStatus()">Check All Level Status</button>
+            <div id="levelStatusResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Progress Statistics</h2>
+            <button onclick="showProgressStats()">Show Progress Stats</button>
+            <div id="progressStatsResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Save Data Migration Test</h2>
+            <button onclick="testLegacyMigration()">Test Legacy Data Migration</button>
+            <div id="migrationResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Export/Import Test</h2>
+            <button onclick="exportSaveData()">Export Save Data</button>
+            <button onclick="importTestData()">Import Test Data</button>
+            <textarea id="exportedData" rows="5" cols="80" placeholder="Exported save data will appear here..."></textarea>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Results</h2>
+            <div id="testResults"></div>
+        </div>
+    </div>
+
+    <script src="utils/SaveManager.js"></script>
+    <script>
+        let testResults = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            testResults.push({ message: logEntry, type });
+            updateTestResults();
+            console.log(logEntry);
+        }
+
+        function updateTestResults() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = testResults.map(result => 
+                `<div class="${result.type}">${result.message}</div>`
+            ).join('');
+        }
+
+        function checkSaveSystemAvailability() {
+            const statusDiv = document.getElementById('saveSystemStatus');
+            
+            if (typeof SaveManager !== 'undefined') {
+                statusDiv.innerHTML = '<div class="success">✓ SaveManager is available</div>';
+                log('SaveManager loaded successfully', 'success');
+                
+                // Test basic functionality
+                try {
+                    const defaultData = SaveManager.getDefaultSaveData();
+                    statusDiv.innerHTML += '<div class="success">✓ Default save data structure is valid</div>';
+                    log('Default save data structure test passed', 'success');
+                } catch (error) {
+                    statusDiv.innerHTML += '<div class="error">✗ Error with default save data</div>';
+                    log(`Default save data error: ${error.message}`, 'error');
+                }
+            } else {
+                statusDiv.innerHTML = '<div class="error">✗ SaveManager is not available</div>';
+                log('SaveManager failed to load', 'error');
+            }
+        }
+
+        function loadAndDisplaySaveData() {
+            try {
+                const saveData = SaveManager.loadProgress();
+                document.getElementById('saveDataDisplay').textContent = JSON.stringify(saveData, null, 2);
+                log('Save data loaded successfully', 'success');
+            } catch (error) {
+                document.getElementById('saveDataDisplay').textContent = `Error: ${error.message}`;
+                log(`Error loading save data: ${error.message}`, 'error');
+            }
+        }
+
+        function clearSaveData() {
+            try {
+                const success = SaveManager.clearProgress();
+                if (success) {
+                    log('Save data cleared successfully', 'success');
+                    loadAndDisplaySaveData();
+                } else {
+                    log('Failed to clear save data', 'error');
+                }
+            } catch (error) {
+                log(`Error clearing save data: ${error.message}`, 'error');
+            }
+        }
+
+        function completeLevel(levelNumber, shots) {
+            try {
+                const success = SaveManager.completeLevel(levelNumber, shots);
+                const resultsDiv = document.getElementById('completionResults');
+                
+                if (success) {
+                    resultsDiv.innerHTML += `<div class="success">✓ Level ${levelNumber} completed with ${shots} shots</div>`;
+                    log(`Level ${levelNumber} completed successfully with ${shots} shots`, 'success');
+                } else {
+                    resultsDiv.innerHTML += `<div class="error">✗ Failed to complete level ${levelNumber}</div>`;
+                    log(`Failed to complete level ${levelNumber}`, 'error');
+                }
+                
+                // Refresh save data display
+                loadAndDisplaySaveData();
+            } catch (error) {
+                log(`Error completing level ${levelNumber}: ${error.message}`, 'error');
+            }
+        }
+
+        function checkLevelStatus() {
+            const resultsDiv = document.getElementById('levelStatusResults');
+            resultsDiv.innerHTML = '';
+            
+            for (let i = 1; i <= 14; i++) {
+                try {
+                    const isUnlocked = SaveManager.isLevelUnlocked(i);
+                    const isCompleted = SaveManager.isLevelCompleted(i);
+                    const bestScore = SaveManager.getBestScore(i);
+                    
+                    let status = isCompleted ? 'Completed' : isUnlocked ? 'Unlocked' : 'Locked';
+                    let scoreText = bestScore ? ` (Best: ${bestScore})` : '';
+                    
+                    const statusClass = isCompleted ? 'success' : isUnlocked ? 'info' : 'error';
+                    resultsDiv.innerHTML += `<div class="${statusClass}">Level ${i}: ${status}${scoreText}</div>`;
+                } catch (error) {
+                    resultsDiv.innerHTML += `<div class="error">Level ${i}: Error - ${error.message}</div>`;
+                }
+            }
+            
+            log('Level status check completed', 'success');
+        }
+
+        function showProgressStats() {
+            try {
+                const stats = SaveManager.getProgressStats();
+                const resultsDiv = document.getElementById('progressStatsResults');
+                
+                resultsDiv.innerHTML = `
+                    <div class="success">
+                        <h4>Progress Statistics:</h4>
+                        <p>Completed Levels: ${stats.completedLevels}/14 (${stats.completionPercentage}%)</p>
+                        <p>Current Level: ${stats.currentLevel}</p>
+                        <p>Last Played Level: ${stats.lastPlayedLevel}</p>
+                        <p>Total Shots: ${stats.totalShots}</p>
+                        <p>Average Shots per Level: ${stats.averageShotsPerLevel}</p>
+                        <p>Unlocked Levels: ${stats.unlockedLevels}</p>
+                    </div>
+                `;
+                
+                log('Progress statistics displayed successfully', 'success');
+            } catch (error) {
+                log(`Error showing progress stats: ${error.message}`, 'error');
+            }
+        }
+
+        function testLegacyMigration() {
+            try {
+                // Create some fake legacy data
+                for (let i = 1; i <= 3; i++) {
+                    localStorage.setItem(`level_${i}_completed`, 'true');
+                    localStorage.setItem(`level_${i + 1}_unlocked`, 'true');
+                }
+                
+                // Clear the new save format to force migration
+                localStorage.removeItem(SaveManager.SAVE_KEY);
+                
+                // Load progress should trigger migration
+                const saveData = SaveManager.loadProgress();
+                
+                const resultsDiv = document.getElementById('migrationResults');
+                resultsDiv.innerHTML = `
+                    <div class="success">✓ Legacy migration test passed</div>
+                    <div class="info">Migrated completed levels: ${saveData.completedLevels.join(', ')}</div>
+                    <div class="info">Migrated unlocked levels: ${saveData.unlockedLevels.join(', ')}</div>
+                `;
+                
+                log('Legacy migration test completed successfully', 'success');
+            } catch (error) {
+                document.getElementById('migrationResults').innerHTML = 
+                    `<div class="error">✗ Legacy migration test failed: ${error.message}</div>`;
+                log(`Legacy migration test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function exportSaveData() {
+            try {
+                const exportedData = SaveManager.exportSaveData();
+                document.getElementById('exportedData').value = exportedData;
+                log('Save data exported successfully', 'success');
+            } catch (error) {
+                log(`Error exporting save data: ${error.message}`, 'error');
+            }
+        }
+
+        function importTestData() {
+            try {
+                const testData = {
+                    completedLevels: [1, 2, 3, 4, 5],
+                    currentLevel: 6,
+                    version: "1.0",
+                    playerStats: {
+                        totalShots: 25,
+                        totalLevelsCompleted: 5,
+                        bestScores: { 1: 2, 2: 3, 3: 4, 4: 3, 5: 5 }
+                    },
+                    unlockedLevels: [1, 2, 3, 4, 5, 6],
+                    lastPlayedLevel: 5,
+                    dateCreated: new Date().toISOString(),
+                    lastModified: new Date().toISOString()
+                };
+                
+                const success = SaveManager.importSaveData(JSON.stringify(testData));
+                
+                if (success) {
+                    log('Test data imported successfully', 'success');
+                    loadAndDisplaySaveData();
+                } else {
+                    log('Failed to import test data', 'error');
+                }
+            } catch (error) {
+                log(`Error importing test data: ${error.message}`, 'error');
+            }
+        }
+
+        // Run initial checks when page loads
+        window.onload = function() {
+            checkSaveSystemAvailability();
+            loadAndDisplaySaveData();
+        };
+    </script>
+</body>
+</html>

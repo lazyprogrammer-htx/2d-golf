@@ -21,17 +21,35 @@ class GameScene extends Phaser.Scene {
         this.shotCounter = 0;
         this.shotCounterText = null;
         this.retryButton = null;
+        this.backButton = null;
+        this.currentLevel = 1;
+        this.levelLoader = null;
+        this.levelNameText = null;
+        this.completedLevels = [];
+        this.saveData = null;
+        this.levelCompleteOverlay = null;
     }
 
     preload() {
         // No assets to preload for basic shapes
     }
 
-    create() {
-        // Create ball sprite (white circle, radius 10, position 100,300)
+    create(data) {
+        // Load save data
+        this.loadSaveData();
+        
+        // Handle level selection from LevelSelectScene
+        if (data && data.selectedLevel) {
+            this.currentLevel = data.selectedLevel;
+        }
+        
+        // Add fade-in transition
+        this.cameras.main.fadeIn(300, 0, 0, 0);
+        
+        // Create ball sprite (white circle, radius 10, initial position)
         this.ball = this.add.circle(100, 300, 10, 0xffffff);
         
-        // Create hole sprite (black circle, radius 20, position 700,300)
+        // Create hole sprite (black circle, radius 20, initial position)
         this.hole = this.add.circle(700, 300, 20, 0x000000);
         
         // Enable physics on ball
@@ -42,25 +60,13 @@ class GameScene extends Phaser.Scene {
         // Remove world bounds collision as we'll use walls instead
         // this.ball.body.setCollideWorldBounds(true);
         
-        // Create walls physics group
+        // Create walls and sand traps groups
         this.walls = this.physics.add.group();
-        
-        // Create level 1 boundary walls
-        this.addWall(50, 300, 20, 400);   // Left wall
-        this.addWall(750, 300, 20, 400);  // Right wall
-        this.addWall(400, 50, 700, 20);   // Top wall
-        this.addWall(400, 550, 700, 20);  // Bottom wall
-        
-        // Add collision between ball and walls
-        this.physics.add.collider(this.ball, this.walls, null, null, this);
-        this.ball.body.setBounce(0.8);
-        
-        // Create sand traps group (no physics, just visual)
         this.sandTraps = this.add.group();
         
-        // Add a test sand trap in the middle
-        const sandTrap = new SandTrap(this, 400, 350, 150, 100);
-        this.sandTraps.add(sandTrap);
+        // Create level loader and load selected level
+        this.levelLoader = new LevelLoader(this);
+        this.loadLevel(this.currentLevel);
         
         // Create three club types
         this.clubs = [
@@ -87,6 +93,9 @@ class GameScene extends Phaser.Scene {
         // Create power meter
         this.powerMeter = new PowerMeter(this, 400, 550);
         
+        // Create level complete overlay
+        this.levelCompleteOverlay = new LevelCompleteOverlay(this);
+        
         // Create shot counter display (top-right)
         this.shotCounterText = this.add.text(this.scale.width - 20, 20, 'Shots: 0', {
             fontSize: '18px',
@@ -95,8 +104,30 @@ class GameScene extends Phaser.Scene {
             padding: { x: 10, y: 5 }
         }).setOrigin(1, 0);
         
-        // Create retry button (top-left)
-        this.retryButton = this.add.text(20, 20, 'RETRY', {
+        // Create back button (top-left)
+        this.backButton = this.add.text(20, 20, '← LEVELS', {
+            fontSize: '18px',
+            fill: '#ffffff',
+            backgroundColor: '#424242',
+            padding: { x: 15, y: 8 }
+        }).setOrigin(0, 0);
+        
+        this.backButton.setInteractive();
+        this.backButton.on('pointerdown', () => {
+            this.returnToLevelSelect();
+        });
+        
+        // Add hover effects for back button
+        this.backButton.on('pointerover', () => {
+            this.backButton.setStyle({ backgroundColor: '#616161' });
+        });
+        
+        this.backButton.on('pointerout', () => {
+            this.backButton.setStyle({ backgroundColor: '#424242' });
+        });
+        
+        // Create retry button (next to back button)
+        this.retryButton = this.add.text(140, 20, 'RETRY', {
             fontSize: '18px',
             fill: '#ffffff',
             backgroundColor: '#ff4444',
@@ -129,6 +160,18 @@ class GameScene extends Phaser.Scene {
         // Add input event listeners
         this.input.on('pointerdown', this.startAiming, this);
         this.input.on('pointerup', this.shoot, this);
+        
+        // Add keyboard controls for level switching (testing)
+        this.input.keyboard.on('keydown-ONE', () => this.loadLevel(1));
+        this.input.keyboard.on('keydown-TWO', () => this.loadLevel(2));
+        this.input.keyboard.on('keydown-THREE', () => this.loadLevel(3));
+        
+        // Add arrow key navigation
+        this.input.keyboard.on('keydown-LEFT', () => this.loadPreviousLevel());
+        this.input.keyboard.on('keydown-RIGHT', () => this.loadNextLevel());
+        
+        // Add R key for restart current level
+        this.input.keyboard.on('keydown-R', () => this.resetBall());
     }
 
     update() {
@@ -294,19 +337,29 @@ class GameScene extends Phaser.Scene {
             if (distance < 15) {
                 this.levelComplete = true;
                 this.ball.body.setVelocity(0, 0);
-                console.log("Level Complete!");
                 
-                // Show level complete text
-                this.add.text(400, 200, 'Level Complete!', {
-                    fontSize: '48px',
-                    fill: '#ffff00',
-                    stroke: '#000000',
-                    strokeThickness: 4
-                }).setOrigin(0.5);
+                // Track level completion
+                this.completeLevel();
                 
-                // Reset after 3 seconds
-                this.time.delayedCall(3000, () => {
-                    this.resetLevel();
+                const currentLevelData = this.levelLoader.getCurrentLevel();
+                const levelName = currentLevelData ? currentLevelData.levelName : `Level ${this.currentLevel}`;
+                
+                console.log(`${levelName} Complete!`);
+                
+                // Get level data for overlay
+                const par = currentLevelData ? currentLevelData.par : 0;
+                
+                // Check if this is the last level
+                this.levelLoader.getMaxLevels().then(maxLevels => {
+                    const isLastLevel = this.currentLevel >= maxLevels;
+                    
+                    // Show level complete overlay
+                    this.levelCompleteOverlay.show(
+                        this.shotCounter, 
+                        par, 
+                        this.currentLevel, 
+                        isLastLevel
+                    );
                 });
             }
         }
@@ -359,9 +412,15 @@ class GameScene extends Phaser.Scene {
     }
     
     resetBall() {
-        // Reset ball position
-        this.ball.x = 100;
-        this.ball.y = 300;
+        // Reset ball to level start position
+        const currentLevelData = this.levelLoader.getCurrentLevel();
+        if (currentLevelData) {
+            this.ball.x = currentLevelData.ballStart.x;
+            this.ball.y = currentLevelData.ballStart.y;
+        } else {
+            this.ball.x = 100;
+            this.ball.y = 300;
+        }
         this.ball.body.setVelocity(0, 0);
         
         // Reset game state
@@ -377,9 +436,15 @@ class GameScene extends Phaser.Scene {
     }
     
     resetLevel() {
-        // Reset ball position
-        this.ball.x = 100;
-        this.ball.y = 300;
+        // Reset ball to level start position
+        const currentLevelData = this.levelLoader.getCurrentLevel();
+        if (currentLevelData) {
+            this.ball.x = currentLevelData.ballStart.x;
+            this.ball.y = currentLevelData.ballStart.y;
+        } else {
+            this.ball.x = 100;
+            this.ball.y = 300;
+        }
         this.ball.body.setVelocity(0, 0);
         
         // Reset game state
@@ -394,11 +459,127 @@ class GameScene extends Phaser.Scene {
         // Hide power meter
         this.powerMeter.hide();
         
-        // Clear any completion text
-        this.children.list.forEach(child => {
-            if (child.type === 'Text' && child.text === 'Level Complete!') {
-                child.destroy();
+        // Hide level complete overlay if visible
+        if (this.levelCompleteOverlay && this.levelCompleteOverlay.getIsVisible()) {
+            this.levelCompleteOverlay.hide();
+        }
+    }
+    
+    /**
+     * Load a specific level
+     * @param {number} levelNumber - The level number to load
+     */
+    async loadLevel(levelNumber) {
+        try {
+            this.currentLevel = levelNumber;
+            const success = await this.levelLoader.loadLevel(levelNumber);
+            
+            if (success) {
+                // Reset game state for new level
+                this.levelComplete = false;
+                this.canShoot = true;
+                this.ballTrail = [];
+                this.ballInSand = false;
+                this.ball.setFillStyle(0xffffff);
+                this.shotCounter = 0;
+                this.shotCounterText.setText(`Shots: ${this.shotCounter}`);
+                this.powerMeter.hide();
+                
+                // Hide level complete overlay if visible
+                if (this.levelCompleteOverlay && this.levelCompleteOverlay.getIsVisible()) {
+                    this.levelCompleteOverlay.hide();
+                }
+                
+                console.log(`Successfully loaded level ${levelNumber}`);
+            } else {
+                console.error(`Failed to load level ${levelNumber}`);
             }
+        } catch (error) {
+            console.error(`Error loading level ${levelNumber}:`, error);
+        }
+    }
+    
+    /**
+     * Complete current level and track progress using SaveManager
+     */
+    completeLevel() {
+        if (!this.completedLevels.includes(this.currentLevel)) {
+            this.completedLevels.push(this.currentLevel);
+            
+            // Use SaveManager to complete level and save progress
+            const success = SaveManager.completeLevel(this.currentLevel, this.shotCounter);
+            
+            if (success) {
+                console.log(`Level ${this.currentLevel} completed! Total completed: ${this.completedLevels.length}`);
+                console.log(`Shots taken: ${this.shotCounter}`);
+            } else {
+                console.error('Failed to save level completion');
+            }
+        }
+    }
+    
+    /**
+     * Load save data from SaveManager
+     */
+    loadSaveData() {
+        try {
+            this.saveData = SaveManager.loadProgress();
+            this.completedLevels = this.saveData.completedLevels || [];
+            console.log('Save data loaded:', this.saveData);
+        } catch (error) {
+            console.error('Error loading save data:', error);
+            this.saveData = SaveManager.getDefaultSaveData();
+            this.completedLevels = [];
+        }
+    }
+    
+    /**
+     * Get completion statistics
+     * @returns {Object} - Completion stats
+     */
+    getCompletionStats() {
+        return {
+            completedLevels: [...this.completedLevels],
+            totalCompleted: this.completedLevels.length,
+            currentLevel: this.currentLevel,
+            isLevelCompleted: (levelNumber) => this.completedLevels.includes(levelNumber)
+        };
+    }
+    
+    /**
+     * Load next level if available
+     */
+    async loadNextLevel() {
+        const maxLevels = await this.levelLoader.getMaxLevels();
+        if (this.currentLevel < maxLevels) {
+            this.loadLevel(this.currentLevel + 1);
+        } else {
+            console.log('All levels completed!');
+        }
+    }
+    
+    /**
+     * Load previous level if available
+     */
+    loadPreviousLevel() {
+        if (this.currentLevel > 1) {
+            this.loadLevel(this.currentLevel - 1);
+        }
+    }
+    
+    /**
+     * Return to level select scene with transition
+     */
+    returnToLevelSelect() {
+        // Hide overlay and cleanup before transition
+        if (this.levelCompleteOverlay && this.levelCompleteOverlay.getIsVisible()) {
+            this.levelCompleteOverlay.hide();
+        }
+        
+        this.cameras.main.fadeOut(300, 0, 0, 0);
+        
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start('LevelSelectScene');
         });
     }
 }
@@ -417,7 +598,7 @@ const config = {
             debug: false
         }
     },
-    scene: GameScene
+    scene: [MenuScene, LevelSelectScene, GameScene]
 };
 
 // Initialize the game

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level System Test - 2D Golf</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <script src="objects/Wall.js"></script>
+    <script src="objects/SandTrap.js"></script>
+    <script src="objects/Club.js"></script>
+    <script src="objects/PowerMeter.js"></script>
+    <script src="objects/LevelLoader.js"></script>
+    <script src="ui/ClubSelector.js"></script>
+</head>
+<body>
+    <div style="text-align: center; margin: 20px;">
+        <h1>Level System Test</h1>
+        <p><strong>Controls:</strong></p>
+        <p>Press 1, 2, or 3 to load specific levels</p>
+        <p>Use LEFT/RIGHT arrow keys to navigate between levels</p>
+        <p>Press R to restart current level</p>
+        <p>Current level name and par will be displayed at the top of the game area</p>
+    </div>
+    <div class="game-container" id="game-canvas"></div>
+    <script src="main.js"></script>
+</body>
+</html>

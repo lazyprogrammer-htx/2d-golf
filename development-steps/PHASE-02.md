@@ -54,46 +54,46 @@ Add walls, sand traps, club system, and proper collision mechanics.
 - [x] Reset when ball leaves sand
 
 ### 9. Create Club class
-- [ ] Make new file objects/Club.js
-- [ ] Properties: name, powerMultiplier, accuracy
-- [ ] Method: calculateShotPower(basePower)
-- [ ] Method: addAccuracySpread(angle)
+- [x] Make new file objects/Club.js
+- [x] Properties: name, powerMultiplier, accuracy
+- [x] Method: calculateShotPower(basePower)
+- [x] Method: addAccuracySpread(angle)
 
 ### 10. Implement three clubs
-- [ ] Driver: power 1.5x, accuracy ±5°
-- [ ] Iron: power 1.0x, accuracy ±2°
-- [ ] Putter: power 0.5x, accuracy 0°
-- [ ] Store in this.clubs array
+- [x] Driver: power 1.5x, accuracy ±5°
+- [x] Iron: power 1.0x, accuracy ±2°
+- [x] Putter: power 0.5x, accuracy 0°
+- [x] Store in this.clubs array
 
 ### 11. Add club selector UI
-- [ ] Create three buttons on left side
-- [ ] Style with club names
-- [ ] Highlight selected club
-- [ ] Set this.selectedClub
+- [x] Create three buttons on left side
+- [x] Style with club names
+- [x] Highlight selected club
+- [x] Set this.selectedClub
 
 ### 12. Apply club mechanics to shot
-- [ ] Multiply shot power by club multiplier
-- [ ] Add random accuracy spread to angle
-- [ ] Update aim line to show spread
-- [ ] Test all three clubs
+- [x] Multiply shot power by club multiplier
+- [x] Add random accuracy spread to angle
+- [x] Update aim line to show spread
+- [x] Test all three clubs
 
 ### 13. Create PowerMeter class
-- [ ] Make new file objects/PowerMeter.js
-- [ ] Draw rectangular meter at bottom
-- [ ] Fill based on drag distance
-- [ ] Gradient: green -> yellow -> red
+- [x] Make new file objects/PowerMeter.js
+- [x] Draw rectangular meter at bottom
+- [x] Fill based on drag distance
+- [x] Gradient: green -> yellow -> red
 
 ### 14. Integrate power meter
-- [ ] Show when aiming
-- [ ] Update fill percentage
-- [ ] Hide after shot
-- [ ] Position at x:400, y:550
+- [x] Show when aiming
+- [x] Update fill percentage
+- [x] Hide after shot
+- [x] Position at x:400, y:550
 
 ### 15. Add shot counter
-- [ ] Track shots taken this level
-- [ ] Display in top-right corner
-- [ ] Increment on each shot
-- [ ] Reset on level restart
+- [x] Track shots taken this level
+- [x] Display in top-right corner
+- [x] Increment on each shot
+- [x] Reset on level restart
 
 ### 16. Create proper level boundaries
 - [x] Remove default world bounds
@@ -102,25 +102,25 @@ Add walls, sand traps, club system, and proper collision mechanics.
 - [x] Test all edges
 
 ### 17. Add ball reset function
-- [ ] Reset to starting position
-- [ ] Clear velocity
-- [ ] Reset ballInSand flag
-- [ ] Clear power meter
+- [x] Reset to starting position
+- [x] Clear velocity
+- [x] Reset ballInSand flag
+- [x] Clear power meter
 
 ### 18. Implement retry button
-- [ ] Position top-left corner
-- [ ] Call ball reset function
-- [ ] Reset shot counter
-- [ ] Keep walls/traps intact
+- [x] Position top-left corner
+- [x] Call ball reset function
+- [x] Reset shot counter
+- [x] Keep walls/traps intact
 
 ### 19. Add club visual feedback
-- [ ] Show club name near ball
-- [ ] Display power multiplier
-- [ ] Show accuracy indicator
-- [ ] Update on club change
+- [x] Show club name near ball
+- [x] Display power multiplier
+- [x] Show accuracy indicator
+- [x] Update on club change
 
 ### 20. Test complete mechanics
-- [ ] Verify walls bounce correctly
-- [ ] Test sand trap slows ball
-- [ ] Confirm clubs work as designed
-- [ ] Check retry resets properly
+- [x] Verify walls bounce correctly
+- [x] Test sand trap slows ball
+- [x] Confirm clubs work as designed
+- [x] Check retry resets properly

@@ -14,6 +14,13 @@ class GameScene extends Phaser.Scene {
         this.walls = null;
         this.sandTraps = null;
         this.ballInSand = false;
+        this.clubs = [];
+        this.selectedClub = null;
+        this.clubSelector = null;
+        this.powerMeter = null;
+        this.shotCounter = 0;
+        this.shotCounterText = null;
+        this.retryButton = null;
     }
 
     preload() {
@@ -55,6 +62,61 @@ class GameScene extends Phaser.Scene {
         const sandTrap = new SandTrap(this, 400, 350, 150, 100);
         this.sandTraps.add(sandTrap);
         
+        // Create three club types
+        this.clubs = [
+            new Club('Driver', 1.5, 5),   // High power, low accuracy
+            new Club('Iron', 1.0, 2),     // Medium power, medium accuracy  
+            new Club('Putter', 0.5, 0)    // Low power, perfect accuracy
+        ];
+        
+        // Create club selector UI
+        this.clubSelector = new ClubSelector(this);
+        
+        // Add clubs to selector
+        this.clubs.forEach(club => this.clubSelector.addClub(club));
+        
+        // Create buttons now that clubs are added
+        this.clubSelector.createClubButtons();
+        this.selectedClub = this.clubSelector.getSelectedClub();
+        
+        // Set up club change callback
+        this.onClubChanged = (club) => {
+            this.selectedClub = club;
+        };
+        
+        // Create power meter
+        this.powerMeter = new PowerMeter(this, 400, 550);
+        
+        // Create shot counter display (top-right)
+        this.shotCounterText = this.add.text(this.scale.width - 20, 20, 'Shots: 0', {
+            fontSize: '18px',
+            fill: '#ffffff',
+            backgroundColor: '#000000',
+            padding: { x: 10, y: 5 }
+        }).setOrigin(1, 0);
+        
+        // Create retry button (top-left)
+        this.retryButton = this.add.text(20, 20, 'RETRY', {
+            fontSize: '18px',
+            fill: '#ffffff',
+            backgroundColor: '#ff4444',
+            padding: { x: 15, y: 8 }
+        }).setOrigin(0, 0);
+        
+        this.retryButton.setInteractive();
+        this.retryButton.on('pointerdown', () => {
+            this.resetBall();
+        });
+        
+        // Add hover effects for retry button
+        this.retryButton.on('pointerover', () => {
+            this.retryButton.setStyle({ backgroundColor: '#ff6666' });
+        });
+        
+        this.retryButton.on('pointerout', () => {
+            this.retryButton.setStyle({ backgroundColor: '#ff4444' });
+        });
+        
         // Create graphics object for aim line and power indicator
         this.graphics = this.add.graphics();
         
@@ -86,7 +148,7 @@ class GameScene extends Phaser.Scene {
         // Check if ball is aiming
         if (this.isAiming && this.canShoot && !this.levelComplete) {
             this.drawAimLine();
-            this.drawPowerIndicator();
+            this.updatePowerMeter();
         }
         
         // Check sand trap overlap
@@ -104,6 +166,7 @@ class GameScene extends Phaser.Scene {
             this.isAiming = true;
             this.aimStartX = pointer.x;
             this.aimStartY = pointer.y;
+            this.powerMeter.show();
         }
     }
 
@@ -126,17 +189,28 @@ class GameScene extends Phaser.Scene {
                 power = Math.min(power, 0.5);
             }
             
-            const velocity = power * 400;
+            // Apply club power multiplier
+            const basePower = power * 400;
+            const clubPower = this.selectedClub ? this.selectedClub.calculateShotPower(basePower) : basePower;
             
-            // Apply velocity to ball
-            const angle = Math.atan2(dy, dx);
+            // Calculate angle with club accuracy spread
+            let angle = Math.atan2(dy, dx);
+            if (this.selectedClub) {
+                angle = this.selectedClub.addAccuracySpread(angle);
+            }
             this.ball.body.setVelocity(
-                Math.cos(angle) * velocity,
-                Math.sin(angle) * velocity
+                Math.cos(angle) * clubPower,
+                Math.sin(angle) * clubPower
             );
             
             // Clear trail on new shot
             this.ballTrail = [];
+            
+            // Hide power meter
+            this.powerMeter.hide();
+            
+            // Increment shot counter
+            this.incrementShots();
         }
     }
 
@@ -151,37 +225,20 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    drawPowerIndicator() {
+    updatePowerMeter() {
         if (this.input.mousePointer) {
             const dx = this.input.mousePointer.x - this.ball.x;
             const dy = this.input.mousePointer.y - this.ball.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             const maxDistance = 200;
-            const power = Math.min(distance / maxDistance, 1);
+            let power = Math.min(distance / maxDistance, 1);
             
-            // Draw rectangle showing power (green to red gradient)
-            const barWidth = 100;
-            const barHeight = 10;
-            const barX = this.ball.x - barWidth / 2;
-            const barY = this.ball.y + 30;
+            // If ball is in sand, show limited power
+            if (this.ballInSand) {
+                power = Math.min(power, 0.5);
+            }
             
-            // Background bar
-            this.graphics.fillStyle(0x333333);
-            this.graphics.fillRect(barX, barY, barWidth, barHeight);
-            
-            // Power bar with color gradient
-            const powerWidth = barWidth * power;
-            const color = power < 0.5 ? 
-                Phaser.Display.Color.Interpolate.ColorWithColor(
-                    {r: 0, g: 255, b: 0}, {r: 255, g: 255, b: 0}, 50, power * 100
-                ) :
-                Phaser.Display.Color.Interpolate.ColorWithColor(
-                    {r: 255, g: 255, b: 0}, {r: 255, g: 0, b: 0}, 50, (power - 0.5) * 100
-                );
-            
-            const colorValue = (color.r << 16) + (color.g << 8) + color.b;
-            this.graphics.fillStyle(colorValue);
-            this.graphics.fillRect(barX, barY, powerWidth, barHeight);
+            this.powerMeter.update(power);
         }
     }
 
@@ -276,11 +333,11 @@ class GameScene extends Phaser.Scene {
         if (inSand && !this.ballInSand) {
             this.ballInSand = true;
             // Darken the ball when in sand
-            this.ball.setTint(0x888888);
+            this.ball.setFillStyle(0x888888);
         } else if (!inSand && this.ballInSand) {
             this.ballInSand = false;
             // Reset ball color when leaving sand
-            this.ball.clearTint();
+            this.ball.setFillStyle(0xffffff);
         }
     }
 
@@ -296,6 +353,29 @@ class GameScene extends Phaser.Scene {
         return wall;
     }
 
+    incrementShots() {
+        this.shotCounter++;
+        this.shotCounterText.setText(`Shots: ${this.shotCounter}`);
+    }
+    
+    resetBall() {
+        // Reset ball position
+        this.ball.x = 100;
+        this.ball.y = 300;
+        this.ball.body.setVelocity(0, 0);
+        
+        // Reset game state
+        this.canShoot = true;
+        this.ballTrail = [];
+        this.ballInSand = false;
+        this.ball.setFillStyle(0xffffff);
+        this.shotCounter = 0;
+        this.shotCounterText.setText(`Shots: ${this.shotCounter}`);
+        
+        // Hide power meter
+        this.powerMeter.hide();
+    }
+    
     resetLevel() {
         // Reset ball position
         this.ball.x = 100;
@@ -307,7 +387,12 @@ class GameScene extends Phaser.Scene {
         this.canShoot = true;
         this.ballTrail = [];
         this.ballInSand = false;
-        this.ball.clearTint();
+        this.ball.setFillStyle(0xffffff);
+        this.shotCounter = 0;
+        this.shotCounterText.setText(`Shots: ${this.shotCounter}`);
+        
+        // Hide power meter
+        this.powerMeter.hide();
         
         // Clear any completion text
         this.children.list.forEach(child => {

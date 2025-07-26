@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Mini Golf</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <style>
+        body { margin: 0; padding: 20px; background: #222; }
+        canvas { border: 2px solid #fff; }
+    </style>
+</head>
+<body>
+    <h1 style="color: white;">Debug Version</h1>
+    <div id="game-canvas"></div>
+    
+    <script>
+        // Minimal GameScene for debugging
+        class DebugGameScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'DebugGameScene' });
+            }
+
+            preload() {
+                console.log('Preload started');
+            }
+
+            create() {
+                console.log('Create started');
+                
+                try {
+                    // Create ball sprite (white circle, radius 10, position 100,300)
+                    this.ball = this.add.circle(100, 300, 10, 0xffffff);
+                    console.log('Ball created:', this.ball);
+                    
+                    // Create hole sprite (black circle, radius 20, position 700,300)
+                    this.hole = this.add.circle(700, 300, 20, 0x000000);
+                    console.log('Hole created:', this.hole);
+                    
+                    // Create a simple wall
+                    this.wall = this.add.rectangle(400, 50, 700, 20, 0x424242);
+                    console.log('Wall created:', this.wall);
+                    
+                    // Add some text
+                    this.add.text(400, 100, 'Debug Scene Working!', {
+                        fontSize: '24px',
+                        fill: '#ffffff'
+                    }).setOrigin(0.5);
+                    
+                    console.log('Create completed successfully');
+                    
+                } catch (error) {
+                    console.error('Error in create():', error);
+                }
+            }
+        }
+
+        // Simple configuration
+        const debugConfig = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            backgroundColor: '#4CAF50',
+            parent: 'game-canvas',
+            scene: DebugGameScene
+        };
+
+        console.log('Starting Phaser game...');
+        const game = new Phaser.Game(debugConfig);
+        
+        game.events.on('ready', () => {
+            console.log('Game ready event fired');
+        });
+    </script>
+</body>
+</html>

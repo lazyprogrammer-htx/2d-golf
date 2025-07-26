@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Validation - Task 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .pass {
+            background: #d4f4dd;
+            border: 1px solid #4caf50;
+        }
+        .fail {
+            background: #fdd4d4;
+            border: 1px solid #f44336;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+        }
+        h2 {
+            color: #333;
+        }
+        .game-preview {
+            margin: 20px 0;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Task 2: Game Mechanics Implementation - Test Results</h1>
+    
+    <h2>File Structure Tests</h2>
+    <div id="file-tests"></div>
+    
+    <h2>Wall System Tests</h2>
+    <div id="wall-tests"></div>
+    
+    <h2>Sand Trap System Tests</h2>
+    <div id="sand-tests"></div>
+    
+    <h2>Club System Tests</h2>
+    <div id="club-tests"></div>
+    
+    <h2>Power Meter Tests</h2>
+    <div id="power-tests"></div>
+    
+    <h2>Game Controls Tests</h2>
+    <div id="control-tests"></div>
+    
+    <h2>Integration Tests</h2>
+    <div id="integration-tests"></div>
+    
+    <h2>Live Game Preview</h2>
+    <div class="game-preview">
+        <iframe src="index.html" width="820" height="640" style="border: none;"></iframe>
+    </div>
+
+    <script>
+        // Test functions
+        function addTestResult(containerId, testName, passed, details = '') {
+            const container = document.getElementById(containerId);
+            const result = document.createElement('div');
+            const status = passed === null ? 'warning' : (passed ? 'pass' : 'fail');
+            const statusText = passed === null ? 'WARNING' : (passed ? 'PASS' : 'FAIL');
+            result.className = `test-result ${status}`;
+            result.innerHTML = `<strong>${testName}:</strong> ${statusText} ${details ? '- ' + details : ''}`;
+            container.appendChild(result);
+        }
+
+        // File existence tests
+        async function testFileStructure() {
+            const files = [
+                'objects/Wall.js',
+                'objects/SandTrap.js',
+                'objects/Club.js',
+                'objects/PowerMeter.js',
+                'ui/ClubSelector.js'
+            ];
+            
+            for (const file of files) {
+                try {
+                    const response = await fetch(file);
+                    addTestResult('file-tests', `${file} exists`, response.ok);
+                } catch (error) {
+                    addTestResult('file-tests', `${file} exists`, false, error.message);
+                }
+            }
+        }
+
+        // Check HTML script references
+        async function testScriptReferences() {
+            try {
+                const response = await fetch('index.html');
+                const html = await response.text();
+                
+                const scripts = [
+                    'objects/Wall.js',
+                    'objects/SandTrap.js', 
+                    'objects/Club.js',
+                    'objects/PowerMeter.js',
+                    'ui/ClubSelector.js'
+                ];
+                
+                scripts.forEach(script => {
+                    const included = html.includes(script);
+                    addTestResult('file-tests', `${script} script tag`, included);
+                });
+                
+            } catch (error) {
+                addTestResult('file-tests', 'HTML script references', false, error.message);
+            }
+        }
+
+        // Test Wall.js content
+        async function testWallSystem() {
+            try {
+                const response = await fetch('objects/Wall.js');
+                const content = await response.text();
+                
+                addTestResult('wall-tests', 'Wall class extends Rectangle', content.includes('extends Phaser.GameObjects.Rectangle'));
+                addTestResult('wall-tests', 'Wall color #424242', content.includes('0x424242'));
+                addTestResult('wall-tests', 'Wall physics enabled', content.includes('physics.add.existing'));
+                addTestResult('wall-tests', 'Wall setImmovable', content.includes('setImmovable(true)'));
+                
+            } catch (error) {
+                addTestResult('wall-tests', 'Wall.js content', false, error.message);
+            }
+        }
+
+        // Test SandTrap.js content
+        async function testSandTrapSystem() {
+            try {
+                const response = await fetch('objects/SandTrap.js');
+                const content = await response.text();
+                
+                addTestResult('sand-tests', 'SandTrap class extends Rectangle', content.includes('extends Phaser.GameObjects.Rectangle'));
+                addTestResult('sand-tests', 'SandTrap color #F4E4C1', content.includes('0xF4E4C1'));
+                addTestResult('sand-tests', 'SandTrap alpha 0.8', content.includes('setAlpha(0.8)'));
+                addTestResult('sand-tests', 'SandTrap contains method', content.includes('contains(x, y)'));
+                
+            } catch (error) {
+                addTestResult('sand-tests', 'SandTrap.js content', false, error.message);
+            }
+        }
+
+        // Test Club.js content
+        async function testClubSystem() {
+            try {
+                const response = await fetch('objects/Club.js');
+                const content = await response.text();
+                
+                addTestResult('club-tests', 'Club constructor with properties', content.includes('constructor(name, powerMultiplier, accuracy)'));
+                addTestResult('club-tests', 'calculateShotPower method', content.includes('calculateShotPower'));
+                addTestResult('club-tests', 'addAccuracySpread method', content.includes('addAccuracySpread'));
+                addTestResult('club-tests', 'getColor method', content.includes('getColor'));
+                
+            } catch (error) {
+                addTestResult('club-tests', 'Club.js content', false, error.message);
+            }
+        }
+
+        // Test PowerMeter.js content
+        async function testPowerMeterSystem() {
+            try {
+                const response = await fetch('objects/PowerMeter.js');
+                const content = await response.text();
+                
+                addTestResult('power-tests', 'PowerMeter constructor', content.includes('constructor(scene, x, y)'));
+                addTestResult('power-tests', 'PowerMeter update method', content.includes('update(percentage)'));
+                addTestResult('power-tests', 'PowerMeter show/hide methods', content.includes('show()') && content.includes('hide()'));
+                addTestResult('power-tests', 'PowerMeter gradient colors', content.includes('ColorWithColor'));
+                
+            } catch (error) {
+                addTestResult('power-tests', 'PowerMeter.js content', false, error.message);
+            }
+        }
+
+        // Test ClubSelector.js content
+        async function testClubSelectorSystem() {
+            try {
+                const response = await fetch('ui/ClubSelector.js');
+                const content = await response.text();
+                
+                addTestResult('control-tests', 'ClubSelector constructor', content.includes('constructor(scene)'));
+                addTestResult('control-tests', 'ClubSelector createClubButtons', content.includes('createClubButtons'));
+                addTestResult('control-tests', 'ClubSelector selectClub method', content.includes('selectClub'));
+                addTestResult('control-tests', 'ClubSelector interactive buttons', content.includes('setInteractive'));
+                
+            } catch (error) {
+                addTestResult('control-tests', 'ClubSelector.js content', false, error.message);
+            }
+        }
+
+        // Test main.js integration
+        async function testMainGameIntegration() {
+            try {
+                const response = await fetch('main.js');
+                const content = await response.text();
+                
+                // Club system integration
+                addTestResult('integration-tests', 'Club system initialized', content.includes('new Club('));
+                addTestResult('integration-tests', 'ClubSelector created', content.includes('new ClubSelector'));
+                addTestResult('integration-tests', 'Three club types', content.includes("'Driver'") && content.includes("'Iron'") && content.includes("'Putter'"));
+                
+                // Power meter integration
+                addTestResult('integration-tests', 'PowerMeter created', content.includes('new PowerMeter'));
+                addTestResult('integration-tests', 'PowerMeter show on aim', content.includes('powerMeter.show'));
+                addTestResult('integration-tests', 'PowerMeter hide after shot', content.includes('powerMeter.hide'));
+                
+                // Game controls
+                addTestResult('integration-tests', 'Shot counter implemented', content.includes('shotCounter') && content.includes('incrementShots'));
+                addTestResult('integration-tests', 'Retry button implemented', content.includes("'RETRY'") && content.includes('resetBall'));
+                addTestResult('integration-tests', 'Shot mechanics with clubs', content.includes('calculateShotPower') && content.includes('addAccuracySpread'));
+                
+                // Sand trap mechanics
+                addTestResult('integration-tests', 'Sand trap velocity reduction', content.includes('* 0.3') || content.includes('*= 0.3'));
+                addTestResult('integration-tests', 'Sand trap power limitation', content.includes('Math.min(power, 0.5)'));
+                addTestResult('integration-tests', 'Ball tinting in sand', content.includes('setTint') && content.includes('clearTint'));
+                
+            } catch (error) {
+                addTestResult('integration-tests', 'main.js integration', false, error.message);
+            }
+        }
+
+        // Run all tests
+        window.addEventListener('load', async () => {
+            await testFileStructure();
+            await testScriptReferences();
+            await testWallSystem();
+            await testSandTrapSystem();
+            await testClubSystem();
+            await testPowerMeterSystem();
+            await testClubSelectorSystem();
+            await testMainGameIntegration();
+        });
+    </script>
+</body>
+</html>

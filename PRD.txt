@@ -1,0 +1,180 @@
+# 2D Golf Game - Product Requirements Document
+
+## Project Overview
+
+**Game Title**: Mini Golf Master (Working Title)  
+**Genre**: 2D Casual Sports/Puzzle Game  
+**Platform**: Desktop Web (HTML5)  
+**Perspective**: Top-down view  
+**Players**: Single-player  
+
+### Vision Statement
+Create a minimalist, engaging 2D golf game that combines simple mechanics with challenging level design. Players progress through 14 unique holes using different clubs and strategic shot planning.
+
+## Core Gameplay
+
+### Game Mechanics
+
+#### Power System
+- **Power Meter**: Visual meter that fills up when player holds mouse button
+- Range: 0-100% power
+- Visual feedback with color gradient (green → yellow → red)
+- Release to shoot
+
+#### Aiming System
+- Click and drag from ball to set direction
+- Visual aim line showing trajectory preview
+- Adjustable based on selected club
+
+#### Physics
+- Simplified ball physics
+- Ball velocity decreases over time (friction)
+- Bounce off walls with angle reflection
+- Different surface friction (grass vs sand)
+
+#### Club System
+**Three Club Types:**
+1. **Driver** - Long range, low accuracy
+   - Power multiplier: 1.5x
+   - Accuracy spread: ±5 degrees
+   
+2. **Iron** - Medium range, medium accuracy
+   - Power multiplier: 1.0x
+   - Accuracy spread: ±2 degrees
+   
+3. **Putter** - Short range, high accuracy
+   - Power multiplier: 0.5x
+   - Accuracy spread: 0 degrees
+
+### Obstacles & Terrain
+
+#### Sand Traps
+- Reduces ball speed by 70% when entered
+- Limits next shot power to 50% maximum
+- Visual: Light tan/beige color
+
+#### Walls
+- Solid boundaries that reflect ball
+- Can be used strategically for bank shots
+- Visual: Dark gray/black lines
+
+#### Hole
+- Target destination
+- Ball must enter at reasonable speed
+- Too fast = ball bounces over
+
+### Level Progression
+- 14 unique holes with increasing difficulty
+- No scoring system - only completion matters
+- "Retry" button always available
+- Progress saved per session
+- Level select screen showing completed levels
+
+## Technical Architecture
+
+### Recommended Tech Stack
+
+**Core Framework**: **Phaser 3**
+- Mature, well-documented 2D game framework
+- Built-in physics (Matter.js)
+- Excellent sprite and animation support
+- Active community
+
+**Additional Libraries**:
+- **Howler.js** - Sound effects (optional for MVP)
+- **LocalStorage API** - Session progress saving
+
+**Build Tools**:
+- **Vite** - Fast development server and bundling
+- **TypeScript** (optional) - Better code organization
+
+### File Structure
+```
+golf-game/
+├── index.html
+├── src/
+│   ├── main.js
+│   ├── scenes/
+│   │   ├── MenuScene.js
+│   │   ├── GameScene.js
+│   │   └── LevelSelectScene.js
+│   ├── objects/
+│   │   ├── Ball.js
+│   │   ├── PowerMeter.js
+│   │   └── Club.js
+│   └── levels/
+│       └── levelData.js
+├── assets/
+│   ├── sprites/
+│   └── sounds/
+└── style.css
+```
+
+## Visual Design
+
+### Art Style
+- **Minimalist geometric shapes**
+- Clean lines and solid colors
+- High contrast for clarity
+- Subtle shadows for depth
+
+### Color Palette
+- **Grass**: #4CAF50 (Green)
+- **Sand**: #F4E4C1 (Beige)
+- **Walls**: #424242 (Dark Gray)
+- **Ball**: #FFFFFF (White)
+- **Hole**: #000000 (Black)
+- **UI**: #2196F3 (Blue accent)
+
+### UI Elements
+- Power meter (bottom of screen)
+- Club selector (left side)
+- Stroke counter (top right)
+- Retry button (top left)
+- Level indicator (top center)
+
+## Level Design Philosophy
+
+### Difficulty Progression
+1. **Holes 1-3**: Tutorial levels (straight shots, basic mechanics)
+2. **Holes 4-7**: Introduce obstacles (walls, simple angles)
+3. **Holes 8-11**: Sand traps, multiple obstacles
+4. **Holes 12-14**: Complex layouts requiring club strategy
+
+### Level Components
+Each level JSON includes:
+- Starting ball position
+- Hole position
+- Wall coordinates
+- Sand trap areas
+- Par suggestion (display only)
+- Level name
+
+
+## Success Metrics (MVP)
+- All 14 levels playable from start to finish
+- Smooth physics and controls
+- Clear visual feedback for all actions
+- No game-breaking bugs
+- Session progress saves correctly
+
+## Future Enhancements (Post-MVP)
+- Level editor
+- Time trials
+- Online leaderboards
+- More club types
+- Weather effects (wind)
+- Mobile support
+- Achievement system
+
+## Technical Constraints
+- Must run smoothly on average desktop browsers
+- Target 60 FPS performance
+- Maximum initial load time: 5 seconds
+- Compatible with Chrome, Firefox, Safari, Edge
+
+## Development Notes
+- Start with rectangular levels before complex shapes
+- Test physics values early and often
+- Keep level data external for easy editing
+- Consider adding debug mode for testing

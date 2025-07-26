@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Validation - Task 1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .pass {
+            background: #d4f4dd;
+            border: 1px solid #4caf50;
+        }
+        .fail {
+            background: #fdd4d4;
+            border: 1px solid #f44336;
+        }
+        h2 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Task 1: Initialize Phaser 3 Project - Test Results</h1>
+    
+    <h2>HTML Structure Tests</h2>
+    <div id="html-tests"></div>
+    
+    <h2>CSS Tests</h2>
+    <div id="css-tests"></div>
+    
+    <h2>Phaser 3 Loading Test</h2>
+    <div id="phaser-test"></div>
+    
+    <h2>Canvas Setup Test</h2>
+    <div id="canvas-test"></div>
+
+    <script>
+        // Test functions
+        function addTestResult(containerId, testName, passed, details = '') {
+            const container = document.getElementById(containerId);
+            const result = document.createElement('div');
+            result.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            result.innerHTML = `<strong>${testName}:</strong> ${passed ? 'PASS' : 'FAIL'} ${details ? '- ' + details : ''}`;
+            container.appendChild(result);
+        }
+
+        // HTML Structure Tests
+        window.addEventListener('load', () => {
+            // Test 1: Check if index.html exists and loads
+            fetch('index.html')
+                .then(response => {
+                    addTestResult('html-tests', 'index.html exists', response.ok);
+                    return response.text();
+                })
+                .then(html => {
+                    // Test 2: Check for canvas element
+                    const hasCanvas = html.includes('id="game-canvas"');
+                    addTestResult('html-tests', 'Canvas element with correct ID', hasCanvas);
+                    
+                    // Test 3: Check for Phaser CDN
+                    const hasPhaserCDN = html.includes('phaser@3.70.0');
+                    addTestResult('html-tests', 'Phaser 3.70.0 CDN included', hasPhaserCDN);
+                    
+                    // Test 4: Check for CSS link
+                    const hasCSSLink = html.includes('style.css');
+                    addTestResult('html-tests', 'CSS file linked', hasCSSLink);
+                    
+                    // Test 5: Check for game container
+                    const hasContainer = html.includes('class="game-container"');
+                    addTestResult('html-tests', 'Game container div present', hasContainer);
+                });
+
+            // CSS Tests
+            fetch('style.css')
+                .then(response => {
+                    addTestResult('css-tests', 'style.css exists', response.ok);
+                    return response.text();
+                })
+                .then(css => {
+                    // Test 6: Check for black background
+                    const hasBlackBg = css.includes('background-color: #000000');
+                    addTestResult('css-tests', 'Black background color set', hasBlackBg);
+                    
+                    // Test 7: Check for canvas dimensions
+                    const hasCanvasWidth = css.includes('width: 800px');
+                    const hasCanvasHeight = css.includes('height: 600px');
+                    addTestResult('css-tests', 'Canvas dimensions 800x600', hasCanvasWidth && hasCanvasHeight);
+                    
+                    // Test 8: Check for responsive design
+                    const hasMediaQuery = css.includes('@media');
+                    addTestResult('css-tests', 'Responsive media query present', hasMediaQuery);
+                    
+                    // Test 9: Check for centering styles
+                    const hasCentering = css.includes('justify-content: center') && css.includes('align-items: center');
+                    addTestResult('css-tests', 'Centering styles applied', hasCentering);
+                });
+
+            // Test 10: Check if we can create an iframe to test the actual page
+            const iframe = document.createElement('iframe');
+            iframe.src = 'index.html';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            iframe.onload = () => {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                
+                // Test 11: Phaser global object
+                const hasPhaserGlobal = typeof iframe.contentWindow.Phaser !== 'undefined';
+                addTestResult('phaser-test', 'Phaser global object available', hasPhaserGlobal, 
+                    hasPhaserGlobal ? `Version: ${iframe.contentWindow.Phaser.VERSION}` : '');
+                
+                // Test 12: Canvas element in DOM
+                const canvas = iframeDoc.getElementById('game-canvas');
+                addTestResult('canvas-test', 'Canvas element in DOM', !!canvas);
+                
+                // Test 13: Game container in DOM
+                const container = iframeDoc.querySelector('.game-container');
+                addTestResult('canvas-test', 'Game container in DOM', !!container);
+                
+                // Clean up
+                document.body.removeChild(iframe);
+            };
+        });
+    </script>
+</body>
+</html>
